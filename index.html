@@ -110,7 +110,7 @@
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
     .card h2 { font-size: 20px; margin-bottom: 8px; color: #fff; }
     .card h3 { font-size: 15px; margin-bottom: 6px; color: var(--accent2); text-transform: uppercase; letter-spacing: 0.5px; }
-    .card p { font-size: 15px; line-height: 1.6; color: var(--text); opacity: 0.95; }
+    .card p { font-size: 15px; line-height: 1.6; color: var(--text); opacity: 0.95; font-weight: normal;}
 
     /* ========== ПОЛЯ ОТПРАВКИ ЗАДАНИЯ ========== */
     .form-group { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
@@ -128,7 +128,7 @@
     .btn-submit:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; box-shadow: none; }
 
     /* ========== ИНТЕРФЕЙС ИИ-РЕЦЕНЗИИ ========== */
-    .feedback-container { display: none; border-radius: var(--radius); padding: 16px; margin-top: 15px; line-height: 1.5; font-size: 14px; border-left: 4px solid transparent; }
+    .feedback-container { display: none; border-radius: var(--radius); padding: 16px; margin-top: 15px; line-height: 1.6; font-size: 14px; border-left: 4px solid transparent; white-space: pre-wrap; }
     .feedback-container.visible { display: block; animation: slideUp 0.3s ease; }
     .feedback-container.success { background: rgba(52,211,153,0.08); border-color: var(--success); color: #a7f3d0; }
     .feedback-container.danger { background: rgba(248,113,113,0.08); border-color: var(--danger); color: #fca5a5; }
@@ -205,20 +205,18 @@
     tg.expand();
 
     // ============================================================
-    // НАСТРОЙКА: Обязательно вставьте сюда ваш НОВЫЙ URL из Google Apps Script
+    // НАСТРОЙКА: Замените на вашу актуальную ссылку из Google Apps Script
     // ============================================================
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxpgnIfBUD7lba5Ub4Wjfw-7BCPfxU8mYLiNN7Zz3A5oX6EknrcLgwbv2s797gGo_no/exec";
 
     const userId = tg.initDataUnsafe?.user?.id || "test_user_local";
 
     let lessonsData = [];
-    let maxAllowedLesson = 2; // По умолчанию открыты 1 и 2 уроки
+    let maxAllowedLesson = 2; 
     let currentLessonIdx = 0;
 
-    /** Загрузка данных при старте */
     async function loadCourse() {
       try {
-        // 1. Считываем список уроков
         const response = await fetch(`${GAS_URL}?action=getLessons`);
         lessonsData = await response.json();
 
@@ -227,7 +225,6 @@
           return;
         }
 
-        // 2. Получаем актуальный уровень доступа ученика из базы
         try {
           const progResponse = await fetch(`${GAS_URL}?action=getProgress&userId=${userId}`);
           const progData = await progResponse.json();
@@ -244,11 +241,10 @@
 
       } catch (err) {
         console.error(err);
-        document.getElementById('loading-screen').innerHTML = `<p style="color:var(--danger); padding:20px; text-align:center; font-size:14px;">Ошибка инициализации API.<br>Проверьте, что в скрипте выдан доступ Anyone.</p>`;
+        document.getElementById('loading-screen').innerHTML = `<p style="color:var(--danger); padding:20px; text-align:center; font-size:14px;">Ошибка инициализации API.<br>Проверьте корректность ссылки GAS_URL.</p>`;
       }
     }
 
-    /** Генерация меню вкладок */
     function renderTabs() {
       const nav = document.getElementById('lessons-nav');
       nav.innerHTML = '';
@@ -259,7 +255,6 @@
         btn.id = `tab-btn-${idx}`;
         btn.textContent = `Урок ${lesson.id}`;
         
-        // КОРРЕКТИРОВКА: Блокируем урок, только если его ID превышает максимальный разрешенный уровень доступа
         if (parseInt(lesson.id, 10) > maxAllowedLesson) {
           btn.disabled = true;
           btn.classList.add('locked');
@@ -273,7 +268,6 @@
       });
     }
 
-    /** Отрисовка активного урока */
     function switchLesson(idx) {
       document.querySelectorAll('.tab-btn').forEach((btn, i) => {
         btn.classList.toggle('active', i === idx);
@@ -301,7 +295,6 @@
       };
     }
 
-    /** Пересылка формы в Google Apps Script */
     async function handleTaskSubmit(lessonId, idx) {
       const textAnswer = document.getElementById('answer-text').value.trim();
       const fileInput = document.getElementById('photo-input');
@@ -340,7 +333,6 @@
           showFeedback(`✅ ЗАЧЕТ!\n\nРазбор ментора:\n${result.feedback}`, 'success');
           submitBtn.textContent = 'Задание успешно выполнено!';
           
-          // Запрашиваем обновленный статус прогресса, чтобы проверить, открылся ли 3 урок
           try {
             const progResponse = await fetch(`${GAS_URL}?action=getProgress&userId=${userId}`);
             const progData = await progResponse.json();
@@ -349,21 +341,19 @@
 
           setTimeout(() => {
             renderTabs();
-            // Если сдали финальный (3-й) урок — показываем экран финиша
             if (parseInt(lessonId, 10) === 3) {
               document.getElementById('lessons-container').style.display = 'none';
               document.getElementById('finish-screen').classList.add('visible');
             } else {
-              // Если сдали 1 или 2 урок, просто перерисовываем табы (чтобы студент увидел разблокировку, если оба сданы)
               if (maxAllowedLesson === 3 && idx !== 2) {
-                currentLessonIdx = 2; // Переключаем автоматически на Урок 3, если он стал доступен
+                currentLessonIdx = 2; 
                 switchLesson(currentLessonIdx);
               }
             }
           }, 4000);
 
         } else {
-          showFeedback(`❌ ЗАДАНИЕ НЕ ЗАЧТЕТО\n\nЗамечания нейросети:\n${result.feedback}`, 'danger');
+          showFeedback(`❌ ЗАДАННЕ НЕ ЗАЧТЕТО\n\nЗамечания нейросети:\n${result.feedback}`, 'danger');
           submitBtn.disabled = false;
           submitBtn.textContent = 'Отправить исправленный вариант';
         }
@@ -376,6 +366,7 @@
       }
     }
 
+    // ИСПРАВЛЕНО: Умное сжатие фото через Canvas перед отправкой в ИИ
     function fileToBase64(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -387,9 +378,8 @@
             const canvas = document.createElement('canvas');
             let width = img.width;
             let height = img.height;
-            
-            // Максимальное разрешение для ИИ-анализа (больше не нужно)
             const MAX_WIDTH = 1200;
+            
             if (width > MAX_WIDTH) {
               height = Math.round((height * MAX_WIDTH) / width);
               width = MAX_WIDTH;
@@ -400,9 +390,8 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
             
-            // Сжимаем в JPEG с качеством 75%
             const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
-            resolve(dataUrl.split(',')[1]); // Отдаем чистый Base64
+            resolve(dataUrl.split(',')[1]);
           };
         };
         reader.onerror = (error) => reject(error);
@@ -419,7 +408,7 @@
     function showFeedback(text, type) {
       const block = document.getElementById('feedback-block-global');
       const textEl = document.getElementById('feedback-text-global');
-      block.className = `feedback-container visible ${type}`;
+      block.className = `feedback-block feedback-container visible ${type}`;
       textEl.innerText = text;
       block.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
