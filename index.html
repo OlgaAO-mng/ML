@@ -8,7 +8,7 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
-    /* ========== ПЕРЕМЕННЫЕ И СБРОС ========== */
+    /* ========== СТИЛИ И ЦВЕТОВАЯ ПАЛИТРА ========== */
     :root {
       --bg:        #0f1117;
       --surface:   #1a1d27;
@@ -36,7 +36,7 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* ========== ЗАГРУЗОЧНЫЙ ЭКРАН ========== */
+    /* ========== ЗАГРУЗКА И СПИННЕР ========== */
     .loading-screen {
       position: fixed;
       top:0; left:0; width:100vw; height:100vh;
@@ -48,16 +48,16 @@
       z-index: 9999;
     }
     .spinner {
-      width: 50px; height: 50px;
-      border: 5px solid var(--surface2);
+      width: 48px; height: 48px;
+      border: 4px solid var(--surface2);
       border-top-color: var(--accent);
       border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-bottom: 20px;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 16px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ========== ШАПКА И НАВИГАЦИЯ ========== */
+    /* ========== ШАПКА КУРСА И ВКЛАДКИ ========== */
     header {
       padding: 16px;
       background: var(--surface);
@@ -65,14 +65,14 @@
       position: sticky;
       top: 0; z-index: 100;
     }
-    .nav-scroll {
+    .nav-container {
       display: flex;
       gap: 10px;
       overflow-x: auto;
       padding-bottom: 4px;
     }
-    .nav-scroll::-webkit-scrollbar { height: 4px; }
-    .nav-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .nav-container::-webkit-scrollbar { height: 4px; }
+    .nav-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
     .tab-btn {
       background: var(--surface2);
@@ -92,106 +92,111 @@
       box-shadow: 0 4px 12px rgba(108,99,255,0.3);
     }
     .tab-btn.locked {
-      opacity: 0.4;
+      opacity: 0.35;
       cursor: not-allowed;
-      background: #11141d;
+      background: #12141f;
     }
 
-    /* ========== КОНТЕНТ ========== */
-    main { padding: 16px; flex: 1; display: flex; flex-direction: column; gap: 20px; max-width: 600px; margin: 0 auto; width: 100%; }
-    .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; border-radius: var(--radius); overflow: hidden; background: #000; box-shadow: 0 8px 24px rgba(0,0,0,0.3); border: 1px solid var(--border); }
-    .video-wrapper iframe { position: absolute; top:0; left:0; width:100%; height:100%; border:0; }
+    /* ========== КОНТЕНТНЫЕ КАРТОЧКИ ========== */
+    main { padding: 16px; flex: 1; display: flex; flex-direction: column; gap: 16px; max-width: 600px; margin: 0 auto; width: 100%; }
+    
+    .video-container { 
+      position: relative; padding-bottom: 56.25%; height: 0; 
+      border-radius: var(--radius); overflow: hidden; background: #000; 
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3); border: 1px solid var(--border); 
+    }
+    .video-container iframe { position: absolute; top:0; left:0; width:100%; height:100%; border:0; }
 
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
-    .card h2 { font-size: 20px; margin-bottom: 10px; color: #fff; }
-    .card h3 { font-size: 16px; margin-bottom: 8px; color: var(--accent2); }
-    .card p { font-size: 15px; line-height: 1.6; color: var(--text); opacity: 0.9; }
+    .card h2 { font-size: 20px; margin-bottom: 8px; color: #fff; }
+    .card h3 { font-size: 15px; margin-bottom: 6px; color: var(--accent2); text-transform: uppercase; letter-spacing: 0.5px; }
+    .card p { font-size: 15px; line-height: 1.6; color: var(--text); opacity: 0.95; }
 
-    /* ========== ФОРМА И ПОЛЯ ========== */
-    .form-group { display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
-    label { font-size: 14px; color: var(--muted); font-weight: 500; }
-    textarea { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); padding: 12px; font-family: inherit; font-size: 15px; resize: none; height: 120px; transition: border-color 0.2s; }
+    /* ========== ПОЛЯ ОТПРАВКИ ЗАДАНИЯ ========== */
+    .form-group { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+    label { font-size: 13px; color: var(--muted); font-weight: 600; }
+    textarea { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); padding: 12px; font-family: inherit; font-size: 15px; resize: none; height: 110px; transition: border-color 0.2s; }
     textarea:focus { outline: none; border-color: var(--accent); }
     
-    .file-input-wrapper { position: relative; margin-top: 5px; }
-    .file-input-wrapper input[type="file"] { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
-    .file-label { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--surface2); border: 1px dashed var(--border); padding: 14px; border-radius: 10px; font-size: 14px; color: var(--muted); cursor: pointer; transition: all 0.2s; }
-    .file-label:hover { border-color: var(--accent); color: var(--text); }
+    .file-upload-box { position: relative; margin-top: 4px; }
+    .file-upload-box input[type="file"] { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+    .file-mock-btn { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--surface2); border: 1px dashed var(--border); padding: 12px; border-radius: 10px; font-size: 14px; color: var(--muted); cursor: pointer; transition: all 0.2s; }
+    .file-mock-btn:hover { border-color: var(--accent); color: var(--text); }
 
-    .btn { background: var(--accent); color: #fff; border: none; padding: 15px; border-radius: var(--radius); font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 14px rgba(108,99,255,0.25); margin-top: 10px; }
-    .btn:hover { background: #5b52e5; transform: translateY(-1px); }
-    .btn:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; box-shadow: none; transform: none; }
+    .btn-submit { background: var(--accent); color: #fff; border: none; padding: 14px; border-radius: var(--radius); font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(108,99,255,0.25); margin-top: 12px; width: 100%; }
+    .btn-submit:hover { background: #5b52e5; }
+    .btn-submit:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; box-shadow: none; }
 
-    /* ========== ОБРАТНАЯ СВЯЗЬ ========== */
-    .feedback-block { display: none; border-radius: var(--radius); padding: 16px; margin-top: 15px; line-height: 1.5; font-size: 14px; border-left: 4px solid transparent; }
-    .feedback-block.visible { display: block; animation: fadeIn 0.3s ease; }
-    .feedback-block.success { background: rgba(52,211,153,0.1); border-color: var(--success); color: #a7f3d0; }
-    .feedback-block.danger { background: rgba(248,113,113,0.1); border-color: var(--danger); color: #fca5a5; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    /* ========== ИНТЕРФЕЙС ИИ-РЕЦЕНЗИИ ========== */
+    .feedback-container { display: none; border-radius: var(--radius); padding: 16px; margin-top: 15px; line-height: 1.5; font-size: 14px; border-left: 4px solid transparent; }
+    .feedback-container.visible { display: block; animation: slideUp 0.3s ease; }
+    .feedback-container.success { background: rgba(52,211,153,0.08); border-color: var(--success); color: #a7f3d0; }
+    .feedback-container.danger { background: rgba(248,113,113,0.08); border-color: var(--danger); color: #fca5a5; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* ========== ЭКРАН ФИНИША ========== */
-    .finish-screen { display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 20px; flex: 1; gap: 16px; }
-    .finish-screen.visible { display: flex; }
-    .icon-grand { font-size: 64px; }
+    /* ========== ФИНАЛЬНЫЙ ЭКРАН ========== */
+    .finish-layout { display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 60px 20px; flex: 1; gap: 12px; }
+    .finish-layout.visible { display: flex; }
+    .badge-grand { font-size: 56px; margin-bottom: 8px; }
   </style>
 </head>
 <body>
 
   <div id="loading-screen" class="loading-screen">
     <div class="spinner"></div>
-    <p style="color: var(--muted);">Загрузка материалов курса...</p>
+    <p style="color: var(--muted); font-size: 14px;">Подключение к материалам курса...</p>
   </div>
 
   <div id="lessons-container" style="display: none;">
     <header>
-      <div class="nav-scroll" id="lessons-nav"></div>
+      <div class="nav-container" id="lessons-nav"></div>
     </header>
 
     <main>
-      <div class="video-wrapper">
+      <div class="video-container">
         <iframe id="video-iframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
       </div>
 
       <div class="card">
-        <h2 id="lesson-title">Название урока</h2>
+        <h2 id="lesson-title">Загрузка...</h2>
         <h3 id="case-title">Кейс</h3>
-        <p id="case-text">Описание ситуации...</p>
+        <p id="case-text">Загрузка контента кейса...</p>
       </div>
 
       <div class="card">
-        <h3>Задание</h3>
-        <p id="task-text" style="margin-bottom: 15px;">Что нужно сделать...</p>
+        <h3>Задание урока</h3>
+        <p id="task-text" style="margin-bottom: 12px;">Загрузка текста задания...</p>
         
         <form id="task-form">
           <div class="form-group">
-            <label for="answer-text">Ваш разбор кейса:</label>
-            <textarea id="answer-text" placeholder="Введите ваш подробный ответ для ментора..."></textarea>
+            <label for="answer-text">Ваш ответ:</label>
+            <textarea id="answer-text" placeholder="Опишите ваше решение кейса для проверки ментором..."></textarea>
           </div>
 
           <div class="form-group" id="photo-block" style="display: none;">
-            <label>Подтверждающий скриншот / фото:</label>
-            <div class="file-input-wrapper">
-              <label class="file-label" id="file-label-text">
-                <span>📁 Выбрать изображение</span>
+            <label>Прикрепить изображение / скриншот решения:</label>
+            <div class="file-upload-box">
+              <label class="file-mock-btn" id="file-label-text">
+                <span>📁 Выбрать файл изображения</span>
               </label>
-              <input type="file" id="photo-input" accept="image/*" onchange="document.getElementById('file-label-text').innerText='✅ Файл прикреплен'"/>
+              <input type="file" id="photo-input" accept="image/*" onchange="document.getElementById('file-label-text').innerText='✅ Файл успешно выбран'"/>
             </div>
           </div>
 
-          <button type="submit" class="btn" id="submit-btn">Отправить задание на проверку</button>
+          <button type="submit" class="btn-submit" id="submit-btn">Отправить задание на проверку</button>
         </form>
 
-        <div id="feedback-block-global" class="feedback-block">
+        <div id="feedback-block-global" class="feedback-container">
           <p id="feedback-text-global"></p>
         </div>
       </div>
     </main>
   </div>
 
-  <div id="finish-screen" class="finish-screen">
-    <div class="icon-grand">🎉</div>
+  <div id="finish-screen" class="finish-layout">
+    <div class="badge-grand">🎓</div>
     <h2>Поздравляем!</h2>
-    <p style="color: var(--muted); max-width: 300px;">Вы успешно изучили все материалы, защитили кейсы перед ИИ-ментором и завершили обучение!</p>
+    <p style="color: var(--muted); max-width: 320px; font-size: 15px; line-height: 1.5;">Вы успешно разобрали все бизнес-кейсы, получили зачеты от ИИ-ментора и завершили обучение!</p>
   </div>
 
   <script>
@@ -200,9 +205,9 @@
     tg.expand();
 
     // ============================================================
-    // НАСТРОЙКА: Вставьте сюда ваш URL Веб-приложения из Google Apps Script
+    // НАСТРОЙКА: Обязательно вставьте сюда ваш URL из Google Apps Script
     // ============================================================
-    const GAS_URL = https://script.google.com/macros/s/AKfycbzOU5RKXX0af0dRdGZcm2tDhfKr4zSXphnOdXzdYkJSeuPfLfL77GFudYXGh6jyNeBL/exec;
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzOU5RKXX0af0dRdGZcm2tDhfKr4zSXphnOdXzdYkJSeuPfLfL77GFudYXGh6jyNeBL/exec";
 
     const userId = tg.initDataUnsafe?.user?.id || "test_user_local";
 
@@ -212,19 +217,27 @@
     /** Загрузка данных при старте */
     async function loadCourse() {
       try {
-        // 1. Получаем список уроков из Google таблицы
+        // 1. Считываем уроки напрямую из Google Таблицы
         const response = await fetch(`${GAS_URL}?action=getLessons`);
         lessonsData = await response.json();
 
         if (!lessonsData || lessonsData.length === 0) {
-          alert("Курс пуст. Добавьте строки в лист 'Уроки' вашей таблицы.");
+          alert("Лист 'Уроки' пуст или заполнено не по инструкции.");
           return;
         }
 
-        // 2. Получаем текущий прогресс ученика (необязательно, ставим 1 по умолчанию)
-        currentLessonIdx = 0; 
+        // 2. Получаем текущую открытую строку прогресса пользователя
+        try {
+          const progResponse = await fetch(`${GAS_URL}?action=getProgress&userId=${userId}`);
+          const progData = await progResponse.json();
+          let userActiveLessonId = parseInt(progData.current_lesson, 10) || 1;
+          
+          let matchIdx = lessonsData.findIndex(l => parseInt(l.id, 10) === userActiveLessonId);
+          currentLessonIdx = matchIdx !== -1 ? matchIdx : 0;
+        } catch(e) {
+          currentLessonIdx = 0;
+        }
 
-        // Скрываем спиннер, показываем интерфейс
         document.getElementById('loading-screen').style.display = 'none';
         document.getElementById('lessons-container').style.display = 'block';
 
@@ -233,11 +246,11 @@
 
       } catch (err) {
         console.error(err);
-        document.getElementById('loading-screen').innerHTML = `<p style="color:var(--danger); padding:20px; text-align:center;">Ошибка подключения к Google Sheets.<br>Проверьте корректность GAS_URL в коде.</p>`;
+        document.getElementById('loading-screen').innerHTML = `<p style="color:var(--danger); padding:20px; text-align:center; font-size:14px;">Ошибка инициализации API.<br>Проверьте, что в скрипте выдан доступ Anyone.</p>`;
       }
     }
 
-    /** Визуальный рендеринг кнопок переключения уроков сверху */
+    /** Генерация меню вкладок */
     function renderTabs() {
       const nav = document.getElementById('lessons-nav');
       nav.innerHTML = '';
@@ -248,7 +261,7 @@
         btn.id = `tab-btn-${idx}`;
         btn.textContent = `Урок ${lesson.id}`;
         
-        // Блокируем доступ к будущим урокам, которые студент еще не открыл
+        // Запрещаем переходить на уроки, к которым ИИ еще не дал одобрения
         if (idx > currentLessonIdx) {
           btn.disabled = true;
           btn.classList.add('locked');
@@ -259,7 +272,7 @@
       });
     }
 
-    /** Заполнение карточек содержимым выбранного урока */
+    /** Отрисовка активного урока */
     function switchLesson(idx) {
       document.querySelectorAll('.tab-btn').forEach((btn, i) => {
         btn.classList.toggle('active', i === idx);
@@ -278,9 +291,8 @@
         photoBlock.style.display = lesson.requiresPhoto ? 'block' : 'none';
       }
 
-      // Очистка формы
       document.getElementById('task-form').reset();
-      document.getElementById('file-label-text').innerText = '📁 Выбрать изображение';
+      document.getElementById('file-label-text').innerText = '📁 Выбрать файл изображения';
       document.getElementById('feedback-block-global').className = 'feedback-block';
 
       const submitBtn = document.getElementById('submit-btn');
@@ -293,19 +305,19 @@
       };
     }
 
-    /** Обработка отправки формы в облако Google и вызов ИИ */
+    /** Пересылка формы в Google Apps Script и вызов Groq ИИ */
     async function handleTaskSubmit(lessonId, idx) {
       const textAnswer = document.getElementById('answer-text').value.trim();
       const fileInput = document.getElementById('photo-input');
       const submitBtn = document.getElementById('submit-btn');
       
       if (!textAnswer) {
-        alert("Пожалуйста, напишите ваш ответ.");
+        alert("Пожалуйста, заполните текстовое поле ответа.");
         return;
       }
 
       submitBtn.disabled = true;
-      submitBtn.innerHTML = `<span>⏳ Нейросеть проверяет работу...</span>`;
+      submitBtn.innerHTML = `<span>⏳ ИИ анализирует решение...</span>`;
 
       let photoBase64 = "";
       if (fileInput && fileInput.files.length > 0) {
@@ -329,15 +341,15 @@
         const result = await response.json();
 
         if (result.approved) {
-          showFeedback(`🎉 Зачет! Комментарий ментора:\n\n${result.feedback}`, 'success');
-          submitBtn.textContent = 'Задание успешно принято!';
+          showFeedback(`✅ ЗАЧЕТ!\n\nРазбор ментора:\n${result.feedback}`, 'success');
+          submitBtn.textContent = 'Задание успешно выполнено!';
           
           if (idx + 1 < lessonsData.length) {
             currentLessonIdx = idx + 1;
             setTimeout(() => {
               renderTabs();
               switchLesson(currentLessonIdx);
-            }, 4000);
+            }, 3500);
           } else {
             setTimeout(() => {
               document.getElementById('lessons-container').style.display = 'none';
@@ -345,14 +357,14 @@
             }, 3000);
           }
         } else {
-          showFeedback(`❌ Нужно доработать. Замечания ИИ:\n\n${result.feedback}`, 'danger');
+          showFeedback(`❌ ЗАДАНИЕ НЕ ЗАЧТЕТО\n\nЗамечания нейросети:\n${result.feedback}`, 'danger');
           submitBtn.disabled = false;
-          submitBtn.textContent = 'Отправить повторно';
+          submitBtn.textContent = 'Отправить исправленный вариант';
         }
 
       } catch (e) {
         console.error(e);
-        alert("Ошибка связи с сервером. Проверьте настройки таблицы.");
+        alert("Ошибка сервера. Убедитесь, что правильно скопировали макрос.");
         submitBtn.disabled = false;
         submitBtn.textContent = 'Отправить задание на проверку';
       }
@@ -377,12 +389,11 @@
     function showFeedback(text, type) {
       const block = document.getElementById('feedback-block-global');
       const textEl = document.getElementById('feedback-text-global');
-      block.className = `feedback-block visible ${type}`;
+      block.className = `feedback-container visible ${type}`;
       textEl.innerText = text;
       block.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    // Запуск приложения
     loadCourse();
   </script>
 </body>
