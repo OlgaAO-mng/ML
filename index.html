@@ -173,8 +173,8 @@
             <textarea id="answer-text" placeholder="Опишите ваше решение кейса для проверки ментором..."></textarea>
           </div>
 
-          <div class="form-group" id="photo-block" style="display: none;">
-            <label>Прикрепить изображение / скриншот решения:</label>
+          <div class="form-group" id="photo-block">
+            <label>Прикрепить изображение / скриншот решения (по желанию):</label>
             <div class="file-upload-box">
               <label class="file-mock-btn" id="file-label-text">
                 <span>📁 Выбрать файл изображения</span>
@@ -205,37 +205,35 @@
     tg.expand();
 
     // ============================================================
-    // НАСТРОЙКА: Обязательно вставьте сюда ваш URL из Google Apps Script
+    // НАСТРОЙКА: Обязательно вставьте сюда ваш НОВЫЙ URL из Google Apps Script
     // ============================================================
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbzOU5RKXX0af0dRdGZcm2tDhfKr4zSXphnOdXzdYkJSeuPfLfL77GFudYXGh6jyNeBL/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyZmGlFvN4v7Je_mjNi0IN0A1-kHl8CxJAXWCL52tUGX28ylvxj5pu4AXM6g8ZiCIXI/exec";
 
     const userId = tg.initDataUnsafe?.user?.id || "test_user_local";
 
     let lessonsData = [];
+    let maxAllowedLesson = 2; // По умолчанию открыты 1 и 2 уроки
     let currentLessonIdx = 0;
 
     /** Загрузка данных при старте */
     async function loadCourse() {
       try {
-        // 1. Считываем уроки напрямую из Google Таблицы
+        // 1. Считываем список уроков
         const response = await fetch(`${GAS_URL}?action=getLessons`);
         lessonsData = await response.json();
 
         if (!lessonsData || lessonsData.length === 0) {
-          alert("Лист 'Уроки' пуст или заполнено не по инструкции.");
+          alert("Лист 'Уроки' пуст.");
           return;
         }
 
-        // 2. Получаем текущую открытую строку прогресса пользователя
+        // 2. Получаем актуальный уровень доступа ученика из базы
         try {
           const progResponse = await fetch(`${GAS_URL}?action=getProgress&userId=${userId}`);
           const progData = await progResponse.json();
-          let userActiveLessonId = parseInt(progData.current_lesson, 10) || 1;
-          
-          let matchIdx = lessonsData.findIndex(l => parseInt(l.id, 10) === userActiveLessonId);
-          currentLessonIdx = matchIdx !== -1 ? matchIdx : 0;
+          maxAllowedLesson = parseInt(progData.maxAllowedLesson, 10) || 2;
         } catch(e) {
-          currentLessonIdx = 0;
+          maxAllowedLesson = 2;
         }
 
         document.getElementById('loading-screen').style.display = 'none';
@@ -261,13 +259,16 @@
         btn.id = `tab-btn-${idx}`;
         btn.textContent = `Урок ${lesson.id}`;
         
-        // Запрещаем переходить на уроки, к которым ИИ еще не дал одобрения
-        if (idx > currentLessonIdx) {
+        // КОРРЕКТИРОВКА: Блокируем урок, только если его ID превышает максимальный разрешенный уровень доступа
+        if (parseInt(lesson.id, 10) > maxAllowedLesson) {
           btn.disabled = true;
           btn.classList.add('locked');
         }
 
-        btn.onclick = () => switchLesson(idx);
+        btn.onclick = () => {
+          currentLessonIdx = idx;
+          switchLesson(idx);
+        };
         nav.appendChild(btn);
       });
     }
@@ -286,14 +287,9 @@
       document.getElementById('case-text').textContent = lesson.caseText;
       document.getElementById('task-text').textContent = lesson.taskText;
 
-      const photoBlock = document.getElementById('photo-block');
-      if (photoBlock) {
-        photoBlock.style.display = lesson.requiresPhoto ? 'block' : 'none';
-      }
-
       document.getElementById('task-form').reset();
       document.getElementById('file-label-text').innerText = '📁 Выбрать файл изображения';
-      document.getElementById('feedback-block-global').className = 'feedback-block';
+      document.getElementById('feedback-block-global').className = 'feedback-container';
 
       const submitBtn = document.getElementById('submit-btn');
       submitBtn.disabled = false;
@@ -305,7 +301,7 @@
       };
     }
 
-    /** Пересылка формы в Google Apps Script и вызов Groq ИИ */
+    /** Пересылка формы в Google Apps Script */
     async function handleTaskSubmit(lessonId, idx) {
       const textAnswer = document.getElementById('answer-text').value.trim();
       const fileInput = document.getElementById('photo-input');
@@ -344,18 +340,28 @@
           showFeedback(`✅ ЗАЧЕТ!\n\nРазбор ментора:\n${result.feedback}`, 'success');
           submitBtn.textContent = 'Задание успешно выполнено!';
           
-          if (idx + 1 < lessonsData.length) {
-            currentLessonIdx = idx + 1;
-            setTimeout(() => {
-              renderTabs();
-              switchLesson(currentLessonIdx);
-            }, 3500);
-          } else {
-            setTimeout(() => {
+          // Запрашиваем обновленный статус прогресса, чтобы проверить, открылся ли 3 урок
+          try {
+            const progResponse = await fetch(`${GAS_URL}?action=getProgress&userId=${userId}`);
+            const progData = await progResponse.json();
+            maxAllowedLesson = parseInt(progData.maxAllowedLesson, 10) || 2;
+          } catch(e) {}
+
+          setTimeout(() => {
+            renderTabs();
+            // Если сдали финальный (3-й) урок — показываем экран финиша
+            if (parseInt(lessonId, 10) === 3) {
               document.getElementById('lessons-container').style.display = 'none';
               document.getElementById('finish-screen').classList.add('visible');
-            }, 3000);
-          }
+            } else {
+              // Если сдали 1 или 2 урок, просто перерисовываем табы (чтобы студент увидел разблокировку, если оба сданы)
+              if (maxAllowedLesson === 3 && idx !== 2) {
+                currentLessonIdx = 2; // Переключаем автоматически на Урок 3, если он стал доступен
+                switchLesson(currentLessonIdx);
+              }
+            }
+          }, 4000);
+
         } else {
           showFeedback(`❌ ЗАДАНИЕ НЕ ЗАЧТЕТО\n\nЗамечания нейросети:\n${result.feedback}`, 'danger');
           submitBtn.disabled = false;
@@ -364,7 +370,7 @@
 
       } catch (e) {
         console.error(e);
-        alert("Ошибка сервера. Убедитесь, что правильно скопировали макрос.");
+        alert("Ошибка сервера.");
         submitBtn.disabled = false;
         submitBtn.textContent = 'Отправить задание на проверку';
       }
